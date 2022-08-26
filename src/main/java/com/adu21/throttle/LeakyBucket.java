@@ -7,15 +7,13 @@ import java.time.Instant;
  * @date 2022/8/26
  */
 public class LeakyBucket {
-    private final long BUCKET_SIZE = 5;
-    private final long LEAKS_INTERVAL_IN_MILLIS = 1000;
-    private int qps = 2;
+    private final long BUCKET_SIZE = 2;
+    private final long LEAKS_INTERVAL_IN_MILLIS = 500; // qps = 2
 
     private long water;
     private long lastLeakTimestamp;
 
-    public LeakyBucket(int qps) {
-        this.qps = qps;
+    public LeakyBucket() {
         this.water = 0;
         this.lastLeakTimestamp = System.currentTimeMillis();
     }
@@ -32,7 +30,7 @@ public class LeakyBucket {
     private void tryProduce() {
         long currentTimeMillis = System.currentTimeMillis();
         if (currentTimeMillis > lastLeakTimestamp) {
-            long leak = ((currentTimeMillis - lastLeakTimestamp) / LEAKS_INTERVAL_IN_MILLIS) * qps;
+            long leak = (currentTimeMillis - lastLeakTimestamp) / LEAKS_INTERVAL_IN_MILLIS;
             if (leak > 0) {
                 water = Math.max(0, water - leak);
                 this.lastLeakTimestamp = currentTimeMillis;
@@ -41,8 +39,8 @@ public class LeakyBucket {
     }
 
     public static void main(String[] args) throws InterruptedException {
-        int qps = 2, count = 20, sleep = 100;
-        final LeakyBucket leakyBucket = new LeakyBucket(qps);
+        int count = 20, sleep = 100;
+        final LeakyBucket leakyBucket = new LeakyBucket();
         for (int i = 0; i < count; i++) {
             Thread.sleep(sleep);
             if (leakyBucket.tryConsume(1)) {
